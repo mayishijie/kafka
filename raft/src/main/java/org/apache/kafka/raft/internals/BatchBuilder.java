@@ -128,7 +128,7 @@ public class BatchBuilder<T> {
      * Check whether the batch has enough room for all the record values.
      *
      * Returns an empty {@link OptionalInt} if the batch builder has room for this list of records.
-     * Otherwise it returns the expected number of bytes needed for a batch to contain these records.
+     * Otherwise, it returns the expected number of bytes needed for a batch to contain these records.
      *
      * @param records the records to use when checking for room
      * @param serializationCache serialization cache for computing sizes
@@ -142,7 +142,7 @@ public class BatchBuilder<T> {
         );
 
         if (!isOpenForAppends) {
-            return OptionalInt.of(batchHeaderSizeInBytes() + bytesNeeded);
+            return OptionalInt.of(Math.addExact(batchHeaderSizeInBytes(), bytesNeeded));
         }
 
         int approxUnusedSizeInBytes = maxBytes - approximateSizeInBytes();
@@ -157,7 +157,7 @@ public class BatchBuilder<T> {
             }
         }
 
-        return OptionalInt.of(batchHeaderSizeInBytes() + bytesNeeded);
+        return OptionalInt.of(Math.addExact(batchHeaderSizeInBytes(), bytesNeeded));
     }
 
     private int flushedSizeInBytes() {
@@ -217,7 +217,7 @@ public class BatchBuilder<T> {
     /**
      * Return the reference to the initial buffer passed through the constructor.
      * This is used in case the buffer needs to be returned to a pool (e.g.
-     * in {@link org.apache.kafka.common.memory.MemoryPool#release(ByteBuffer)}.
+     * in {@link org.apache.kafka.common.memory.MemoryPool#release(ByteBuffer)}).
      *
      * @return the initial buffer passed to the constructor
      */
@@ -256,6 +256,7 @@ public class BatchBuilder<T> {
             RecordBatch.NO_SEQUENCE,
             false,
             isControlBatch,
+            false,
             leaderEpoch,
             numRecords()
         );
@@ -327,7 +328,7 @@ public class BatchBuilder<T> {
             if (expectedNextOffset - baseOffset >= Integer.MAX_VALUE) {
                 throw new IllegalArgumentException(
                     String.format(
-                        "Adding %s records to a batch with base offset of %s and next offset of %s",
+                        "Adding %d records to a batch with base offset of %d and next offset of %d",
                         records.size(),
                         baseOffset,
                         expectedNextOffset
